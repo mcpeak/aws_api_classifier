@@ -1,9 +1,10 @@
 """
     Usage:
-        apiapi.py (all|mutating)
+        apiapi.py (all|mutating) [--csv=output_file]
 """
 
-from iampoliciesgonewild import global_permissions
+import csv
+from policyuniverse import global_permissions
 from tabulate import tabulate
 
 
@@ -35,10 +36,10 @@ def create_permissions_table():
     for service, actions in permissions.items():
         for action, tags in actions.items():
             row = [service, action]
-            
+
             for tag in TAGS.keys():
                 row.append(tag in tags)
-            
+
             rows.append(row)
     return rows
 
@@ -62,6 +63,14 @@ def create_mutating_table():
     return rows
 
 
+def output_csv(filename, rows):
+    with open(filename, 'wb') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(headers)
+            for row in rows:
+                csv_writer.writerow(row)
+
+
 if __name__ == '__main__':
     from docopt import docopt
     args = docopt(__doc__, version="APIAPI 1.0")
@@ -70,5 +79,11 @@ if __name__ == '__main__':
     elif args.get('all'):
         rows = create_permissions_table()
 
-    print(args)
     print tabulate(rows, headers=headers)
+
+    filename = args.get('--csv')
+
+    if filename:
+        output_csv(filename, rows)
+    else:
+        print tabulate(rows, headers=headers)
