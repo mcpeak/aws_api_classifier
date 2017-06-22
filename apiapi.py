@@ -1,7 +1,6 @@
 """
     Usage:
-        apiapi.py all
-        apiapi.py mutating
+        apiapi.py (all|mutating)
 """
 
 from iampoliciesgonewild import global_permissions
@@ -50,10 +49,10 @@ def create_mutating_table():
     for service, actions in permissions.items():
         for action, tags in actions.items():
             row = [service, action]
-            
+
             for tag in TAGS.keys():
                 row.append(tag in tags)
-            
+
             # CONTROL_PLANE && (MUTATING or SIDE_EFFECT)
             # if 'CONTROL_PLANE' in tags:
             if 'MUTATING' in tags:
@@ -66,9 +65,10 @@ def create_mutating_table():
 if __name__ == '__main__':
     from docopt import docopt
     args = docopt(__doc__, version="APIAPI 1.0")
-    if 'mutating' in args:
+    if args.get('mutating'):
         rows = create_mutating_table()
-    elif 'all'in args:
+    elif args.get('all'):
         rows = create_permissions_table()
-        
+
+    print(args)
     print tabulate(rows, headers=headers)
