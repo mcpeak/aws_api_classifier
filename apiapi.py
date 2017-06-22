@@ -1,10 +1,11 @@
 """
     Usage:
-        apiapi.py all
-        apiapi.py mutating
+        apiapi.py all [--csv=output_file]
+        apiapi.py mutating [--csv=output_file]
 """
 
-from iampoliciesgonewild import global_permissions
+import csv
+from policyuniverse import global_permissions
 from tabulate import tabulate
 
 
@@ -36,10 +37,10 @@ def create_permissions_table():
     for service, actions in permissions.items():
         for action, tags in actions.items():
             row = [service, action]
-            
+
             for tag in TAGS.keys():
                 row.append(tag in tags)
-            
+
             rows.append(row)
     return rows
 
@@ -50,10 +51,10 @@ def create_mutating_table():
     for service, actions in permissions.items():
         for action, tags in actions.items():
             row = [service, action]
-            
+
             for tag in TAGS.keys():
                 row.append(tag in tags)
-            
+
             # CONTROL_PLANE && (MUTATING or SIDE_EFFECT)
             # if 'CONTROL_PLANE' in tags:
             if 'MUTATING' in tags:
@@ -63,12 +64,25 @@ def create_mutating_table():
     return rows
 
 
+def output_csv(filename, rows):
+    with open(filename, 'wb') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(headers)
+            for row in rows:
+                csv_writer.writerow(row)
+
+
 if __name__ == '__main__':
     from docopt import docopt
     args = docopt(__doc__, version="APIAPI 1.0")
     if 'mutating' in args:
         rows = create_mutating_table()
-    elif 'all'in args:
+    elif 'all' in args:
         rows = create_permissions_table()
-        
-    print tabulate(rows, headers=headers)
+
+    filename = args.get('--csv')
+
+    if filename:
+        output_csv(filename, rows)
+    else:
+        print tabulate(rows, headers=headers)
