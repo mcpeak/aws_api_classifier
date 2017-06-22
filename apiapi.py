@@ -5,6 +5,7 @@
 
 import csv
 from policyuniverse import global_permissions
+import re
 from tabulate import tabulate
 
 
@@ -21,15 +22,23 @@ for service_name, service_description in global_permissions.items():
     service = service_description['StringPrefix']
     permissions[service] = dict()
     for action in service_description['Actions']:
+
+        action_words = re.findall('[A-Z][^A-Z]*', action)
+        action_words = [word.lower() for word in action_words]
         permissions[service][action] = set()
+
         for tag_name, matches in TAGS.items():
             for match in matches:
-                # if action.lower().startswith(match):
-                if match in action.lower():
-                    permissions[service][action].add(tag_name)
+                try:
+                    if match in action_words:
+                        permissions[service][action].add(tag_name)
+                except IndexError:
+                    if action.lower().startswith(match):
+                        permissions[service][action].add(tag_name)
 
 headers = ['service', 'permission']
 headers.extend(TAGS.keys())
+
 
 def create_permissions_table():
     rows = []
@@ -78,8 +87,6 @@ if __name__ == '__main__':
         rows = create_mutating_table()
     elif args.get('all'):
         rows = create_permissions_table()
-
-    print tabulate(rows, headers=headers)
 
     filename = args.get('--csv')
 
